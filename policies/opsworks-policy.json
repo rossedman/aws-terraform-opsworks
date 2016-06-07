@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "opsworks:*",
+        "ec2:*",
+        "elasticloadbalancing:*",
+        "iam:GetRolePolicy",
+        "iam:ListRoles",
+        "iam:ListInstanceProfiles",
+        "iam:PassRole",
+        "iam:ListUsers",
+        "iam:PutRolePolicy",
+        "iam:AddRoleToInstanceProfile",
+        "iam:CreateInstanceProfile",
+        "iam:CreateRole"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

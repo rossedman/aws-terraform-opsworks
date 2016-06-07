@@ -1,0 +1,7 @@
+#Terraform
+.terraform
+*.tfstate
+*.backup
+
+#SSH Files
+ssh.cfg
