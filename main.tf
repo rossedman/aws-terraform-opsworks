@@ -106,22 +106,27 @@ resource "aws_key_pair" "private" {
  resource "aws_opsworks_stack" "main" {
    name = "${var.app_name}-stack"
    region = "${var.region}"
-   default_os = "Amazon Linux"
-   #default_os = "Amazon Linux 2016.03"
-   #agent_version = "11.10"
+   default_os = "Amazon Linux 2016.03"
+   agent_version = "LATEST"
    service_role_arn = "${aws_iam_role.opsworks.arn}"
    default_instance_profile_arn = "${aws_iam_instance_profile.opsworks.arn}"
-   #configuration_manager_version = "12"
+   configuration_manager_version = "12"
    vpc_id = "${module.network.vpc_id}"
    default_subnet_id = "${element(split(",",module.network.private_ids),0)}"
    default_ssh_key_name = "${aws_key_pair.private.key_name}"
    use_opsworks_security_groups = false
+   use_custom_cookbooks = true
+
+   custom_cookbooks_source {
+     type = "s3"
+     url = "https://s3-us-west-2.amazonaws.com/testapp.storage/cookbooks/cookbooks.tar.gz"
+   }
  }
 
- resource "aws_opsworks_application" "laravel" {
+ resource "aws_opsworks_application" "php" {
    name = "lms"
    short_name = "lms"
-   type = "php"
+   type = "other"
    stack_id = "${aws_opsworks_stack.main.id}"
    app_source {
      type = "git"
@@ -193,12 +198,23 @@ resource "aws_elb" "web" {
 /*--------------------------------------------------
  * PHP Layer
  *-------------------------------------------------*/
- resource "aws_opsworks_php_app_layer" "app" {
+ /*resource "aws_opsworks_php_app_layer" "app" {
    stack_id = "${aws_opsworks_stack.main.id}"
    name = "php-app-test"
-   auto_assign_public_ips = true
+   auto_assign_public_ips = false
    custom_security_group_ids = ["${module.network.vpc_sg}"]
    elastic_load_balancer = "${aws_elb.web.name}"
+ }*/
+
+ resource "aws_opsworks_custom_layer" "app" {
+    auto_healing = true
+    stack_id = "${aws_opsworks_stack.main.id}"
+    name = "PHP App Test"
+    short_name = "php_app_test"
+    auto_assign_public_ips = false
+    custom_security_group_ids = ["${module.network.vpc_sg}"]
+    elastic_load_balancer = "${aws_elb.web.name}"
+    drain_elb_on_shutdown = true
  }
 
  resource "aws_opsworks_instance" "php" {
@@ -211,7 +227,7 @@ resource "aws_elb" "web" {
    ]
    count = 4
    stack_id = "${aws_opsworks_stack.main.id}"
-   layer_ids = ["${aws_opsworks_php_app_layer.app.id}"]
+   layer_ids = ["${aws_opsworks_custom_layer.app.id}"]
    auto_scaling_type = "load"
    install_updates_on_boot = true
    instance_type = "t2.micro"

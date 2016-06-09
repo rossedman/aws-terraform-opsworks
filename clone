@@ -1,0 +1,10 @@
+#!/bin/bash
+
+aws opsworks clone-stack \
+  --source-stack-id="21f04f1e-9c18-42ae-871b-8b8c84a92320" \
+  --service-role-arn="arn:aws:iam::351353229602:role/opsworks_role" \
+  --name=BasicApp-stack-green \
+  --region=us-east-1 \
+  --chef-configuration ManageBerkshelf=false,BerkshelfVersion=3.2.0 \
+  --configuration-manager Name=Chef,Version="12" \
+  --default-os "Amazon Linux 2015.03"
