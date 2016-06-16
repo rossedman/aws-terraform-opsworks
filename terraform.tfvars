@@ -1,6 +1,6 @@
 #
 # App Specifics
-# This will set naming conventions for everything in AWS
+# this will set naming conventions for everything in AWS
 #
 app_name = "BasicApp"
 environment = "dev"
@@ -29,5 +29,12 @@ private_subnets = "10.128.11.0/24,10.128.21.0/24"
 
 #
 # DNS Settings
+# this will create an internal domain
 #
 internal_domain = "rossedman.internal"
+
+#
+# Config Settings
+# configuration management settings
+#
+cookbook_bucket = "https://s3-us-west-2.amazonaws.com/testapp.storage/cookbooks/cookbooks.tar.gz"

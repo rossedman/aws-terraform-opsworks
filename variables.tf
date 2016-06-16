@@ -14,6 +14,10 @@ variable "bastion_key" {
   description = "Public key for bastion host"
 }
 
+variable "cookbook_bucket" {
+  description = "s3 bucket location of custom cookbooks"
+}
+
 variable "environment" {
   description = "The name of the environment resources should be associated with"
 }

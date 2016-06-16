@@ -5,3 +5,7 @@
 
 #SSH Files
 ssh.cfg
+
+#Keys
+keys/*
+!keys/.gitignore
