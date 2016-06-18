@@ -34,6 +34,7 @@ resource "aws_opsworks_application" "php" {
  *-------------------------------------------------*/
 resource "aws_elb" "web" {
   count = 3
+  connection_draining = true
   cross_zone_load_balancing = true
   subnets = ["${split(",", module.network.public_ids)}"]
   security_groups = [
@@ -44,8 +45,9 @@ resource "aws_elb" "web" {
   listener {
     instance_port = 80
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port = 443
+    lb_protocol = "https"
+    ssl_certificate_id = "${var.ssl_cert_arn}"
   }
 
   health_check {
@@ -61,6 +63,11 @@ resource "aws_elb" "web" {
     env = "${var.environment}"
   }
 }
+
+/*resource "aws_proxy_protocol_policy" "smtp" {
+  load_balancer = "${aws_elb.lb.name}"
+  instance_ports = ["25", "587"]
+}*/
 
 /*--------------------------------------------------
  * Web Layers

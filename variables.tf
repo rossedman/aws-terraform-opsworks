@@ -54,6 +54,10 @@ variable "allowed_to_ssh" {
   description = "comma separated range of CIDR blocks that will allow SSH"
 }
 
+variable "ssl_cert_arn" {
+  description = "This is the ARN of a cert registered with AWS Certificate Manager"
+}
+
 # EBS backed HVM
 variable "aws_linux_amis_ebs" {
   default = {

@@ -21,32 +21,6 @@ module "network" {
   environment = "${var.environment}"
 }
 
-module "vpc_flowlog" {
-  source = "github.com/rossedman/aws-terraform-modules/logging/flowlog"
-  name = "vpc-flowlog"
-  vpc_id = "${module.network.vpc_id}"
-}
-
-module "http_nacl" {
-  source = "github.com/rossedman/aws-terraform-modules/network/security/nacl_http"
-  vpc_id = "${module.network.vpc_id}"
-  ssh_cidr_block = "${var.allowed_to_ssh}"
-  subnet_ids = "${module.network.public_ids}"
-  app_name = "${var.app_name}"
-  environment = "${var.environment}"
-}
-
-module "private_nacl" {
-  source = "github.com/rossedman/aws-terraform-modules/network/security/nacl_http"
-  name = "private-http-nacl"
-  vpc_id = "${module.network.vpc_id}"
-  subnet_ids = "${module.network.private_ids}"
-  http_cidr_block = "${var.vpc_cidr}"
-  ssh_cidr_block = "${var.vpc_cidr}"
-  app_name = "${var.app_name}"
-  environment = "${var.environment}"
-}
-
 /*--------------------------------------------------
  * Bastion
  *
@@ -82,25 +56,35 @@ resource "aws_key_pair" "private" {
  * set security groups for public access to ELB and then
  * ELB access-only to instances behind the load balancer
  *-------------------------------------------------*/
+module "vpc_flowlog" {
+  source = "github.com/rossedman/aws-terraform-modules/logging/flowlog"
+  name = "vpc-flowlog"
+  vpc_id = "${module.network.vpc_id}"
+}
+
+module "http_nacl" {
+  source = "github.com/rossedman/aws-terraform-modules/network/security/nacl_http"
+  vpc_id = "${module.network.vpc_id}"
+  ssh_cidr_block = "${var.allowed_to_ssh}"
+  subnet_ids = "${module.network.public_ids}"
+  app_name = "${var.app_name}"
+  environment = "${var.environment}"
+}
+
+module "private_nacl" {
+  source = "github.com/rossedman/aws-terraform-modules/network/security/nacl_http"
+  name = "private-http-nacl"
+  vpc_id = "${module.network.vpc_id}"
+  subnet_ids = "${module.network.private_ids}"
+  http_cidr_block = "${var.vpc_cidr}"
+  ssh_cidr_block = "${var.vpc_cidr}"
+  app_name = "${var.app_name}"
+  environment = "${var.environment}"
+}
+
 module "elb_security_group" {
   source = "github.com/rossedman/aws-terraform-modules/network/security/sg_http"
   name = "elb-http"
-  vpc_id = "${module.network.vpc_id}"
-  app_name = "${var.app_name}"
-  environment = "${var.environment}"
-}
-
-module "private_web_security_group" {
-  source = "github.com/rossedman/aws-terraform-modules/network/security/sg_http"
-  name = "opsworks-http"
-  vpc_id = "${module.network.vpc_id}"
-  app_name = "${var.app_name}"
-  environment = "${var.environment}"
-}
-
-module "elastic_security_group" {
-  source = "github.com/rossedman/aws-terraform-modules/network/security/sg_elastic"
-  name = "opsworks-elastic"
   vpc_id = "${module.network.vpc_id}"
   app_name = "${var.app_name}"
   environment = "${var.environment}"

@@ -38,3 +38,9 @@ internal_domain = "rossedman.internal"
 # configuration management settings
 #
 cookbook_bucket = "https://s3-us-west-2.amazonaws.com/testapp.storage/cookbooks/cookbooks.tar.gz"
+
+#
+# Security
+#
+logs_bucket = "testapp.storage"
+ssl_cert_arn = "arn:aws:acm:us-west-2:351353229602:certificate/a496f90e-4346-4adc-957b-d6db165d4e9b"
