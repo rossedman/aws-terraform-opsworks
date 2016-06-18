@@ -11,7 +11,7 @@ private_key = "keys/private.pub"
 # Allowed To SSH
 # this can be a comma-separated list of cidr blocks and ip addresses
 #
-allowed_to_ssh = "0.0.0.0/0"
+allowed_to_ssh = "76.183.238.0/24"
 
 #
 # Region & Zones

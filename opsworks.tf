@@ -30,20 +30,60 @@ resource "aws_opsworks_application" "php" {
 }
 
 /*--------------------------------------------------
- * Opsworks Layers
+ * Load Balancers
  *-------------------------------------------------*/
-resource "aws_opsworks_custom_layer" "web" {
-  auto_healing = true
-  stack_id = "${module.opsworks_stack.id}"
-  name = "PHP App Test"
-  short_name = "php_app_test"
-  auto_assign_public_ips = false
-  custom_security_group_ids = [
+resource "aws_elb" "web" {
+  count = 3
+  cross_zone_load_balancing = true
+  subnets = ["${split(",", module.network.public_ids)}"]
+  security_groups = [
     "${module.network.vpc_sg}",
     "${module.elb_security_group.id}"
   ]
-  elastic_load_balancer = "${aws_elb.web.name}"
+
+  listener {
+    instance_port = 80
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    target = "HTTP:80/"
+    interval = 5
+  }
+
+  tags {
+    app = "${var.app_name}"
+    env = "${var.environment}"
+  }
+}
+
+/*--------------------------------------------------
+ * Web Layers
+ *-------------------------------------------------*/
+resource "aws_opsworks_custom_layer" "web" {
+  count = 3
+  auto_healing = true
+  stack_id = "${module.opsworks_stack.id}"
+  name = "php-layer-${count.index}"
+  short_name = "php-layer-${count.index}"
+  auto_assign_public_ips = false
+  custom_security_group_ids = ["${module.network.vpc_sg}"]
+  elastic_load_balancer = "${element(aws_elb.web.*.name, count.index)}"
   drain_elb_on_shutdown = true
   custom_configure_recipes = ["php-app::configure"]
   custom_deploy_recipes = ["php-app::configure","php-app::deploy"]
+}
+
+resource "aws_opsworks_custom_layer" "elasticsearch" {
+  auto_healing = true
+  stack_id = "${module.opsworks_stack.id}"
+  name = "elasticsearch"
+  short_name = "elasticsearch"
+  auto_assign_public_ips = false
+  custom_security_group_ids = ["${module.network.vpc_sg}"]
 }

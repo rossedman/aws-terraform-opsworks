@@ -21,6 +21,32 @@ module "network" {
   environment = "${var.environment}"
 }
 
+module "vpc_flowlog" {
+  source = "github.com/rossedman/aws-terraform-modules/logging/flowlog"
+  name = "vpc-flowlog"
+  vpc_id = "${module.network.vpc_id}"
+}
+
+module "http_nacl" {
+  source = "github.com/rossedman/aws-terraform-modules/network/security/nacl_http"
+  vpc_id = "${module.network.vpc_id}"
+  ssh_cidr_block = "${var.allowed_to_ssh}"
+  subnet_ids = "${module.network.public_ids}"
+  app_name = "${var.app_name}"
+  environment = "${var.environment}"
+}
+
+module "private_nacl" {
+  source = "github.com/rossedman/aws-terraform-modules/network/security/nacl_http"
+  name = "private-http-nacl"
+  vpc_id = "${module.network.vpc_id}"
+  subnet_ids = "${module.network.private_ids}"
+  http_cidr_block = "${var.vpc_cidr}"
+  ssh_cidr_block = "${var.vpc_cidr}"
+  app_name = "${var.app_name}"
+  environment = "${var.environment}"
+}
+
 /*--------------------------------------------------
  * Bastion
  *
@@ -68,36 +94,14 @@ module "private_web_security_group" {
   source = "github.com/rossedman/aws-terraform-modules/network/security/sg_http"
   name = "opsworks-http"
   vpc_id = "${module.network.vpc_id}"
-  #incoming_cidr = "${module.elb_security_group.id}"
   app_name = "${var.app_name}"
   environment = "${var.environment}"
 }
 
-/*--------------------------------------------------
- * Load Balancer
- *-------------------------------------------------*/
-resource "aws_elb" "web" {
-  cross_zone_load_balancing = true
-  subnets = ["${split(",", module.network.public_ids)}"]
-  security_groups = ["${module.elb_security_group.id}"]
-
-  listener {
-    instance_port = 80
-    instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
-  }
-
-  health_check {
-    healthy_threshold = 2
-    unhealthy_threshold = 2
-    timeout = 3
-    target = "HTTP:80/"
-    interval = 60
-  }
-
-  tags {
-    app = "${var.app_name}"
-    env = "${var.environment}"
-  }
+module "elastic_security_group" {
+  source = "github.com/rossedman/aws-terraform-modules/network/security/sg_elastic"
+  name = "opsworks-elastic"
+  vpc_id = "${module.network.vpc_id}"
+  app_name = "${var.app_name}"
+  environment = "${var.environment}"
 }
